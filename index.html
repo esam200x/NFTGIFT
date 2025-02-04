@@ -33,7 +33,7 @@
         <!-- قسم قبل ربط المحفظة -->
         <div id="pre-connect">
             <p id="wallet-status" class="text-muted">يرجى ربط محفظتك لبدء التداول.</p>
-            <button class="btn btn-success btn-lg mb-3" onclick="connectWallet()">ربط محفظة Tonkeeper</button>
+            <button class="btn btn-success btn-lg mb-3" onclick="connectWallet()">ربط المحفظة</button>
         </div>
 
         <!-- قسم بعد ربط المحفظة -->
@@ -85,7 +85,7 @@
         // تحديث حالة المحفظة
         async function updateWalletStatus() {
             const wallet = await connector.restoreConnection();
-            if (wallet) {
+            if (wallet && wallet.account) {
                 document.getElementById('wallet-status').innerText = `محفظتك متصلة: ${wallet.account.address}`;
 
                 // إظهار القسم بعد الربط وإخفاء القسم الأول
@@ -99,6 +99,8 @@
         // وظيفة ربط المحفظة (محدثة)
         async function connectWallet() {
             try {
+                console.log("محاولة ربط المحفظة...");
+
                 // التحقق مما إذا كان Ton Connect SDK يعمل
                 if (!connector || !connector.connectWallet) {
                     console.error("Ton Connect SDK غير مهيأ بشكل صحيح.");
@@ -106,11 +108,20 @@
                     return;
                 }
 
+                console.log("Ton Connect SDK جاهز.");
+
                 // محاولة ربط المحفظة
                 const wallet = await connector.connectWallet();
-                if (wallet) {
-                    console.log("تم ربط المحفظة:", wallet);
-                    updateWalletStatus();
+                console.log("المحفظة:", wallet);
+
+                if (wallet && wallet.account) {
+                    console.log("تم ربط المحفظة بنجاح:", wallet.account.address);
+                    document.getElementById('wallet-status').innerText = `محفظتك متصلة: ${wallet.account.address}`;
+
+                    // إظهار القسم بعد الربط وإخفاء القسم الأول
+                    document.getElementById('pre-connect').style.display = 'none';
+                    document.getElementById('post-connect').style.display = 'block';
+
                     Telegram.WebApp.showAlert("تم ربط المحفظة بنجاح!");
                 } else {
                     console.error("فشل ربط المحفظة.");
