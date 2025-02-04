@@ -4,51 +4,178 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>متجر الهدايا</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
             background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
         }
         .gift {
-            margin: 20px;
-            padding: 10px;
             border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 10px;
             background-color: white;
-            display: inline-block;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
+            transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #0056b3;
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
-    <h1>مرحبًا بك في متجر الهدايا!</h1>
-
-    <!-- قسم شراء الهدية -->
-    <div class="gift">
-        <img src="https://via.placeholder.com/150" alt="هدية 1">
-        <p>هدية 1 - 10$</p>
-        <button onclick="buyGift()">اشترِ الآن</button>
+    <div class="container text-center mt-5">
+        <h1 class="text-primary">مرحبًا بك في متجر الهدايا!</h1>
+        <!-- قسم ربط المحفظة -->
+        <p id="wallet-status">يرجى ربط محفظتك لبدء التداول.</p>
+        <button class="btn btn-success mb-3" onclick="connectWallet()">ربط محفظة Tonkeeper</button>
+        <!-- عرض الرصيد -->
+        <p id="balance-display">رصيدك الحالي: <span id="balance">0 TON</span></p>
+        <!-- قسم شحن الحساب -->
+        <div class="mb-4">
+            <h3>شحن الحساب</h3>
+            <input type="number" id="deposit-amount" placeholder="أدخل المبلغ" class="form-control mb-2" />
+            <button class="btn btn-warning" onclick="depositFunds()">شحن الحساب</button>
+        </div>
+        <!-- قسم الهدايا -->
+        <div id="gifts-list"></div>
+        <!-- قسم بيع الهدية -->
+        <div class="mt-4">
+            <h3>بيع الهدية</h3>
+            <p>سعر الهدية: <span id="sell-price">10 TON</span></p>
+            <button class="btn btn-danger" onclick="sellGift()">بيع الهدية</button>
+        </div>
     </div>
-
-    <!-- زر ربط محفظة Tonkeeper -->
-    <p>يرجى ربط محفظتك لشراء الهدايا.</p>
-    <button onclick="connectWallet()">ربط محفظة Tonkeeper</button>
-
+    <script src="https://unpkg.com/@tonconnect/sdk"></script>
     <script>
-        // التحقق مما إذا كان التطبيق يعمل داخل Telegram
+        // تهيئة Ton Connect
+        const connector = new TonConnect({
+            manifestUrl: 'https://esam200x.github.io/NFTGIFT/tonconnect-manifest.json'
+        });
+
+        let userBalance = 0; // رصيد المستخدم داخل التطبيق
+
+        // قائمة الهدايا
+        const gifts = [
+            { name: "هدية 1", price: 10, image: "https://via.placeholder.com/150" },
+            { name: "هدية 2", price: 20, image: "https://via.placeholder.com/150" },
+            { name: "هدية 3", price: 30, image: "https://via.placeholder.com/150" }
+        ];
+
+        // عنوان المحفظة الرئيسية (محفظة الشحن)
+        const mainWalletAddress = 'UQAGitCFQNH1JV2s7p6xomRZepCXk93fo11f3SaHH1P6l_-z';
+
+        // عنوان المحفظة الخاصة بالرسوم
+        const feeWalletAddress = 'UQCfbFUUE6f4zcAym0xEDN9bGgoN_FoUNtMNeu0C0Td6wLQ1';
+
+        // تحديث حالة المحفظة
+        async function updateWalletStatus() {
+            const wallet = await connector.restoreConnection();
+            if (wallet) {
+                document.getElementById('wallet-status').innerText = `محفظتك متصلة: ${wallet.account.address}`;
+            } else {
+                document.getElementById('wallet-status').innerText = 'يرجى ربط محفظتك.';
+            }
+        }
+
+        // وظيفة ربط المحفظة
+        async function connectWallet() {
+            try {
+                await connector.connectWallet();
+                updateWalletStatus();
+                Telegram.WebApp.showAlert("تم ربط المحفظة بنجاح!");
+            } catch (error) {
+                console.error("حدث خطأ أثناء ربط المحفظة:", error);
+                Telegram.WebApp.showAlert("فشل ربط المحفظة. يرجى المحاولة مرة أخرى.");
+            }
+        }
+
+        // وظيفة شحن الحساب
+        async function depositFunds() {
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            if (!amount || amount <= 0) {
+                Telegram.WebApp.showAlert("يرجى إدخال مبلغ صحيح.");
+                return;
+            }
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 360,
+                messages: [
+                    {
+                        address: mainWalletAddress, // عنوان المحفظة الرئيسية
+                        amount: (amount * 1_000_000_000).toString() // تحويل المبلغ إلى nanoTON
+                    }
+                ]
+            };
+            try {
+                await connector.sendTransaction(transaction);
+                userBalance += amount;
+                document.getElementById('balance').innerText = `${userBalance.toFixed(2)} TON`;
+                Telegram.WebApp.showAlert(`تم شحن الحساب بمبلغ ${amount} TON.`);
+            } catch (error) {
+                console.error("حدث خطأ أثناء شحن الحساب:", error);
+                Telegram.WebApp.showAlert("فشل شحن الحساب. يرجى المحاولة مرة أخرى.");
+            }
+        }
+
+        // وظيفة شراء الهدية
+        function buyGift(price) {
+            const fee = price * 0.01; // 1% رسوم
+            const totalCost = price + fee;
+
+            if (userBalance < totalCost) {
+                Telegram.WebApp.showAlert("رصيدك غير كافٍ لشراء هذه الهدية.");
+                return;
+            }
+
+            userBalance -= totalCost;
+            document.getElementById('balance').innerText = `${userBalance.toFixed(2)} TON`;
+
+            // خصم الرسوم وإرسالها إلى محفظة الرسوم
+            sendFeeToWallet(fee);
+
+            Telegram.WebApp.showAlert(`تم شراء الهدية بمبلغ ${price} TON + رسوم ${fee.toFixed(2)} TON.`);
+        }
+
+        // وظيفة بيع الهدية
+        function sellGift() {
+            const sellPrice = parseFloat(document.getElementById('sell-price').innerText.split(' ')[0]);
+            const fee = sellPrice * 0.01; // 1% رسوم
+            const netAmount = sellPrice - fee;
+
+            userBalance += netAmount;
+            document.getElementById('balance').innerText = `${userBalance.toFixed(2)} TON`;
+
+            // خصم الرسوم وإرسالها إلى محفظة الرسوم
+            sendFeeToWallet(fee);
+
+            Telegram.WebApp.showAlert(`تم بيع الهدية بمبلغ ${netAmount.toFixed(2)} TON بعد خصم الرسوم.`);
+        }
+
+        // إرسال الرسوم إلى محفظة الرسوم
+        function sendFeeToWallet(fee) {
+            // هنا يمكنك إضافة منطق لإرسال الرسوم إلى محفظة الرسوم (اختياري)
+            console.log(`تم إرسال رسوم بقيمة ${fee.toFixed(2)} TON إلى المحفظة: ${feeWalletAddress}`);
+        }
+
+        // عرض الهدايا
+        function renderGifts() {
+            const giftsList = document.getElementById('gifts-list');
+            gifts.forEach((gift, index) => {
+                const giftDiv = document.createElement('div');
+                giftDiv.className = 'gift';
+                giftDiv.innerHTML = `
+                    <img src="${gift.image}" alt="${gift.name}">
+                    <h5>${gift.name} - ${gift.price} TON</h5>
+                    <button class="btn btn-primary" onclick="buyGift(${gift.price})">اشترِ الآن</button>
+                `;
+                giftsList.appendChild(giftDiv);
+            });
+        }
+
+        // إضافة زر الرجوع
         if (window.Telegram && window.Telegram.WebApp) {
             const webApp = Telegram.WebApp;
 
@@ -59,40 +186,11 @@
             webApp.BackButton.onClick(() => {
                 webApp.close();
             });
-        } else {
-            alert("يرجى فتح هذا التطبيق داخل Telegram.");
         }
 
-        // وظيفة شراء الهدية
-        function buyGift() {
-            // إظهار رسالة داخل Telegram
-            Telegram.WebApp.showAlert("تم طلب الهدية!");
-
-            // إرسال رسالة إلى البوت (اختياري)
-            fetch(`https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    chat_id: Telegram.WebApp.initDataUnsafe.user.id,
-                    text: "طلب شراء هدية"
-                })
-            });
-        }
-
-        // وظيفة لربط محفظة Tonkeeper
-        function connectWallet() {
-            // Deep Link لربط محفظة Tonkeeper
-            const tonkeeperLink = "https://app.tonkeeper.com/ton-connect";
-
-            // فتح الرابط داخل Telegram Web App
-            if (window.Telegram && window.Telegram.WebApp) {
-                Telegram.WebApp.openLink(tonkeeperLink);
-            } else {
-                alert("يرجى فتح هذا التطبيق داخل Telegram.");
-            }
-        }
+        // تحديث حالة المحفظة وعرض الهدايا عند التحميل
+        updateWalletStatus();
+        renderGifts();
     </script>
 </body>
 </html>
