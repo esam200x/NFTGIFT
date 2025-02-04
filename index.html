@@ -96,12 +96,26 @@
             }
         }
 
-        // وظيفة ربط المحفظة
+        // وظيفة ربط المحفظة (محدثة)
         async function connectWallet() {
             try {
-                await connector.connectWallet();
-                updateWalletStatus();
-                Telegram.WebApp.showAlert("تم ربط المحفظة بنجاح!");
+                // التحقق مما إذا كان Ton Connect SDK يعمل
+                if (!connector || !connector.connectWallet) {
+                    console.error("Ton Connect SDK غير مهيأ بشكل صحيح.");
+                    Telegram.WebApp.showAlert("حدث خطأ أثناء ربط المحفظة. يرجى المحاولة مرة أخرى.");
+                    return;
+                }
+
+                // محاولة ربط المحفظة
+                const wallet = await connector.connectWallet();
+                if (wallet) {
+                    console.log("تم ربط المحفظة:", wallet);
+                    updateWalletStatus();
+                    Telegram.WebApp.showAlert("تم ربط المحفظة بنجاح!");
+                } else {
+                    console.error("فشل ربط المحفظة.");
+                    Telegram.WebApp.showAlert("فشل ربط المحفظة. يرجى المحاولة مرة أخرى.");
+                }
             } catch (error) {
                 console.error("حدث خطأ أثناء ربط المحفظة:", error);
                 Telegram.WebApp.showAlert("فشل ربط المحفظة. يرجى المحاولة مرة أخرى.");
