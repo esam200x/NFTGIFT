@@ -29,26 +29,37 @@
 <body>
     <div class="container text-center mt-5">
         <h1 class="text-primary">مرحبًا بك في متجر الهدايا!</h1>
-        <!-- قسم ربط المحفظة -->
-        <p id="wallet-status">يرجى ربط محفظتك لبدء التداول.</p>
-        <button class="btn btn-success mb-3" onclick="connectWallet()">ربط محفظة Tonkeeper</button>
-        <!-- عرض الرصيد -->
-        <p id="balance-display">رصيدك الحالي: <span id="balance">0 TON</span></p>
-        <!-- قسم شحن الحساب -->
-        <div class="mb-4">
-            <h3>شحن الحساب</h3>
-            <input type="number" id="deposit-amount" placeholder="أدخل المبلغ" class="form-control mb-2" />
-            <button class="btn btn-warning" onclick="depositFunds()">شحن الحساب</button>
+
+        <!-- قسم قبل ربط المحفظة -->
+        <div id="pre-connect">
+            <p id="wallet-status" class="text-muted">يرجى ربط محفظتك لبدء التداول.</p>
+            <button class="btn btn-success btn-lg mb-3" onclick="connectWallet()">ربط محفظة Tonkeeper</button>
         </div>
-        <!-- قسم الهدايا -->
-        <div id="gifts-list"></div>
-        <!-- قسم بيع الهدية -->
-        <div class="mt-4">
-            <h3>بيع الهدية</h3>
-            <p>سعر الهدية: <span id="sell-price">10 TON</span></p>
-            <button class="btn btn-danger" onclick="sellGift()">بيع الهدية</button>
+
+        <!-- قسم بعد ربط المحفظة -->
+        <div id="post-connect" style="display: none;">
+            <!-- عرض الرصيد -->
+            <p id="balance-display" class="text-success">رصيدك الحالي: <span id="balance">0 TON</span></p>
+
+            <!-- قسم شحن الحساب -->
+            <div class="mb-4">
+                <h3 class="text-info">شحن الحساب</h3>
+                <input type="number" id="deposit-amount" placeholder="أدخل المبلغ" class="form-control mb-2" />
+                <button class="btn btn-warning btn-block" onclick="depositFunds()">شحن الحساب</button>
+            </div>
+
+            <!-- قسم الهدايا -->
+            <div id="gifts-list"></div>
+
+            <!-- قسم بيع الهدية -->
+            <div class="mt-4">
+                <h3 class="text-danger">بيع الهدية</h3>
+                <p>سعر الهدية: <span id="sell-price">10 TON</span></p>
+                <button class="btn btn-danger btn-block" onclick="sellGift()">بيع الهدية</button>
+            </div>
         </div>
     </div>
+
     <script src="https://unpkg.com/@tonconnect/sdk"></script>
     <script>
         // تهيئة Ton Connect
@@ -76,6 +87,10 @@
             const wallet = await connector.restoreConnection();
             if (wallet) {
                 document.getElementById('wallet-status').innerText = `محفظتك متصلة: ${wallet.account.address}`;
+
+                // إظهار القسم بعد الربط وإخفاء القسم الأول
+                document.getElementById('pre-connect').style.display = 'none';
+                document.getElementById('post-connect').style.display = 'block';
             } else {
                 document.getElementById('wallet-status').innerText = 'يرجى ربط محفظتك.';
             }
