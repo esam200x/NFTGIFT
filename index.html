@@ -63,6 +63,11 @@
     <!-- تحميل Ton Connect SDK -->
     <script src="https://unpkg.com/@tonconnect/sdk"></script>
     <script>
+        // التحقق من تحميل Ton Connect SDK
+        if (!window.TonConnect) {
+            alert("خطأ: لم يتم تحميل Ton Connect SDK. يرجى التحقق من اتصال الإنترنت أو مصدر المكتبة.");
+        }
+
         // تهيئة Ton Connect
         const connector = new TonConnect({
             manifestUrl: 'https://esam200x.github.io/NFTGIFT/tonconnect-manifest.json'
@@ -104,7 +109,7 @@
 
                 // التحقق مما إذا كان Ton Connect SDK يعمل
                 if (!window.TonConnect) {
-                    alert("Ton Connect SDK غير متوفر.");
+                    alert("Ton Connect SDK غير متوفر. يرجى التحقق من اتصال الإنترنت أو مصدر المكتبة.");
                     return;
                 }
 
