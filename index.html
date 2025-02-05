@@ -97,40 +97,43 @@
             }
         }
 
-        // وظيفة ربط المحفظة (محدثة)
+        // وظيفة ربط المحفظة (محدثة مع تنبيهات)
         async function connectWallet() {
             try {
-                console.log("محاولة ربط المحفظة...");
+                alert("محاولة ربط المحفظة...");
 
                 // التحقق مما إذا كان Ton Connect SDK يعمل
-                if (!connector || !connector.connectWallet) {
-                    console.error("Ton Connect SDK غير مهيأ بشكل صحيح.");
-                    Telegram.WebApp.showAlert("حدث خطأ أثناء ربط المحفظة. يرجى المحاولة مرة أخرى.");
+                if (!window.TonConnect) {
+                    alert("Ton Connect SDK غير متوفر.");
                     return;
                 }
 
-                console.log("Ton Connect SDK جاهز.");
+                alert("Ton Connect SDK جاهز.");
+
+                // التحقق مما إذا كانت الوظيفة متاحة
+                if (!connector || !connector.connectWallet) {
+                    alert("وظيفة connectWallet غير متوفرة.");
+                    return;
+                }
+
+                alert("محاولة استدعاء connectWallet...");
 
                 // محاولة ربط المحفظة
                 const wallet = await connector.connectWallet();
-                console.log("المحفظة:", wallet);
+                alert("المحفظة: " + JSON.stringify(wallet));
 
                 if (wallet && wallet.account) {
-                    console.log("تم ربط المحفظة بنجاح:", wallet.account.address);
+                    alert("تم ربط المحفظة بنجاح: " + wallet.account.address);
                     document.getElementById('wallet-status').innerText = `محفظتك متصلة: ${wallet.account.address}`;
 
                     // إظهار القسم بعد الربط وإخفاء القسم الأول
                     document.getElementById('pre-connect').style.display = 'none';
                     document.getElementById('post-connect').style.display = 'block';
-
-                    Telegram.WebApp.showAlert("تم ربط المحفظة بنجاح!");
                 } else {
-                    console.error("فشل ربط المحفظة.");
-                    Telegram.WebApp.showAlert("فشل ربط المحفظة. يرجى المحاولة مرة أخرى.");
+                    alert("فشل ربط المحفظة.");
                 }
             } catch (error) {
-                console.error("حدث خطأ أثناء ربط المحفظة:", error);
-                Telegram.WebApp.showAlert("فشل ربط المحفظة. يرجى المحاولة مرة أخرى.");
+                alert("حدث خطأ أثناء ربط المحفظة: " + error.message);
             }
         }
 
@@ -138,7 +141,7 @@
         async function depositFunds() {
             const amount = parseFloat(document.getElementById('deposit-amount').value);
             if (!amount || amount <= 0) {
-                Telegram.WebApp.showAlert("يرجى إدخال مبلغ صحيح.");
+                alert("يرجى إدخال مبلغ صحيح.");
                 return;
             }
             const transaction = {
@@ -154,10 +157,9 @@
                 await connector.sendTransaction(transaction);
                 userBalance += amount;
                 document.getElementById('balance').innerText = `${userBalance.toFixed(2)} TON`;
-                Telegram.WebApp.showAlert(`تم شحن الحساب بمبلغ ${amount} TON.`);
+                alert(`تم شحن الحساب بمبلغ ${amount} TON.`);
             } catch (error) {
-                console.error("حدث خطأ أثناء شحن الحساب:", error);
-                Telegram.WebApp.showAlert("فشل شحن الحساب. يرجى المحاولة مرة أخرى.");
+                alert("حدث خطأ أثناء شحن الحساب: " + error.message);
             }
         }
 
@@ -167,7 +169,7 @@
             const totalCost = price + fee;
 
             if (userBalance < totalCost) {
-                Telegram.WebApp.showAlert("رصيدك غير كافٍ لشراء هذه الهدية.");
+                alert("رصيدك غير كافٍ لشراء هذه الهدية.");
                 return;
             }
 
@@ -177,7 +179,7 @@
             // خصم الرسوم وإرسالها إلى محفظة الرسوم
             sendFeeToWallet(fee);
 
-            Telegram.WebApp.showAlert(`تم شراء الهدية بمبلغ ${price} TON + رسوم ${fee.toFixed(2)} TON.`);
+            alert(`تم شراء الهدية بمبلغ ${price} TON + رسوم ${fee.toFixed(2)} TON.`);
         }
 
         // وظيفة بيع الهدية
@@ -192,7 +194,7 @@
             // خصم الرسوم وإرسالها إلى محفظة الرسوم
             sendFeeToWallet(fee);
 
-            Telegram.WebApp.showAlert(`تم بيع الهدية بمبلغ ${netAmount.toFixed(2)} TON بعد خصم الرسوم.`);
+            alert(`تم بيع الهدية بمبلغ ${netAmount.toFixed(2)} TON بعد خصم الرسوم.`);
         }
 
         // إرسال الرسوم إلى محفظة الرسوم
