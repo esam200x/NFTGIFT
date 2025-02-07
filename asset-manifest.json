@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/NFTGIFT/static/css/main.e6c13ad2.css",
+    "main.js": "/NFTGIFT/static/js/main.61c92f67.js",
+    "index.html": "/NFTGIFT/index.html",
+    "main.e6c13ad2.css.map": "/NFTGIFT/static/css/main.e6c13ad2.css.map",
+    "main.61c92f67.js.map": "/NFTGIFT/static/js/main.61c92f67.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.61c92f67.js"
+  ]
+}
