@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/NFTGIFT/static/css/main.bce79567.css",
-    "main.js": "/NFTGIFT/static/js/main.1692bde0.js",
+    "main.js": "/NFTGIFT/static/js/main.7a36af1e.js",
     "index.html": "/NFTGIFT/index.html",
     "main.bce79567.css.map": "/NFTGIFT/static/css/main.bce79567.css.map",
-    "main.1692bde0.js.map": "/NFTGIFT/static/js/main.1692bde0.js.map"
+    "main.7a36af1e.js.map": "/NFTGIFT/static/js/main.7a36af1e.js.map"
   },
   "entrypoints": [
     "static/css/main.bce79567.css",
-    "static/js/main.1692bde0.js"
+    "static/js/main.7a36af1e.js"
   ]
 }
